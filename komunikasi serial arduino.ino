@@ -44,7 +44,6 @@ void setup() {
   Wire.begin();
   rtc.begin();
   rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  //rtc.adjust(DateTime(F(__DATE__ " " __TIME__)));
 
   if (SD.begin(pinCS)) {
     Serial.println("SD card is ready to use.");
@@ -75,90 +74,118 @@ void loop() {
       int MQ4 = analogRead(A1);
       int MQ6 = analogRead(A0);
 
-      String msg = "*" + String(MQ6) + "," + String(MQ4) + "," + String(MQ138) + "," + String(MQ135) + "," + String(k) + "#";
+      float volt138 =(MQ138/1024.0)*5;
+      float rs138 = ((5.0/volt138)-1)*2.4;
+      float rasio138 = (rs138/60.06925);
+      float ppm138 = exp((rasio138 - 5.8434)/(-0.48));
+
+      float volt135 =(MQ135/1024.0)*5;
+      float rs135 = ((5.0/volt135)-1)*2.48;
+      float rasio135 = (rs135/45.85559);
+      float ppm135 = exp((rasio135 - 1.6853)/(-0.088));
+
+      float volt6 =(MQ6/1024.0)*5;
+      float rs6 = ((5.0/volt6)-1)*2.63;
+      float rasio6 = (rs6/1.8517);
+      float ppm6 = exp((rasio6 - 5.129)/(-0.775));
+      
+      float volt4 =(MQ4/1024.0)*5;
+      float rs4 = ((5.0/volt4)-1)*2.44;
+      float rasio4 = (rs4/2.47951152829918);
+      float ppm4 = exp((rasio4 - 4.2705)/(-0.206)); //
+
+      String msg = "*" + String(ppm6) + "," + String(ppm4) + "," + String(ppm138) + "," + String(ppm135) + "," + String(k) + "#";
       Serial.print(msg);
 
       lcd.clear();
       lcd.setCursor(0, 0);
       lcd.print("MQ6   = " + String(MQ6));
-      lcd.setCursor(14, 0);
-      lcd.print("PPM");
+      Serial.println("MQ6   = " + String(MQ6));
       lcd.setCursor(0, 1);
       lcd.print("MQ4   = " + String(MQ4));
+      Serial.println("MQ4   = " + String(MQ4));
       lcd.setCursor(14, 1);
-      lcd.print("PPM");
+      lcd.print("SPL:");
       lcd.setCursor(0, 2);
       lcd.print("MQ138 = " + String(MQ138));
+      Serial.println("MQ138 = " + String(MQ138));
       lcd.setCursor(14, 2);
-      lcd.print("PPM");
+      lcd.print(String(k));
       lcd.setCursor(0, 3);
       lcd.print("MQ135 = " + String(MQ135));
-      lcd.setCursor(14, 3);
-      lcd.print("PPM");
+      Serial.println("MQ135 = " + String(MQ135));
 
       Serial3.print(msg);
 
       Serial.println(".");
-      Serial.println("[Arduino] MQ6 = " + String(MQ6) + " PPM");
-      Serial.println("[Arduino] MQ4 = " + String(MQ4) + " PPM");
-      Serial.println("[Arduino] MQ138 = " + String(MQ138) + " PPM");
-      Serial.println("[Arduino] MQ135 = " + String(MQ135) + " PPM");
+      Serial.println("[Arduino] MQ6 = " + String(ppm6) + " PPM");
+      Serial.println("[Arduino] MQ4 = " + String(ppm4) + " PPM");
+      Serial.println("[Arduino] MQ138 = " + String(ppm138) + " PPM");
+      Serial.println("[Arduino] MQ135 = " + String(ppm135) + " PPM");
       Serial.println("[Arduino] Sampling Ke-" + String(k));
 
       myFile = SD.open("mq135.txt", FILE_WRITE);
       if (myFile) {
         myFile.print(dateTimeStr);
         myFile.print(",");
+        myFile.print(String(k));
+        myFile.print(",");
         myFile.println(String(MQ135));
         Serial.println("succeeded opening.txt");
-        lcd.setCursor(18, 3);
-        lcd.print("OK");
+        lcd.setCursor(19, 3);
+        lcd.print("O");
         myFile.close();
       } else {
         Serial.println("error opening.txt");
-        lcd.setCursor(18, 3);
+        lcd.setCursor(19, 3);
         lcd.print("X");
       }
       myFile = SD.open("mq138.txt", FILE_WRITE);
       if (myFile) {
         myFile.print(dateTimeStr);
         myFile.print(",");
+        myFile.print(String(k));
+        myFile.print(",");
         myFile.println(String(MQ138));
         Serial.println("succeeded opening.txt");
-        lcd.setCursor(18, 2);
-        lcd.print("OK");
+        lcd.setCursor(19, 2);
+        lcd.print("O");
         myFile.close();
       } else {
         Serial.println("error opening.txt");
-        lcd.setCursor(18, 2);
+        lcd.setCursor(19, 2);
         lcd.print("X");
       }
       myFile = SD.open("mq4.txt", FILE_WRITE);
       if (myFile) {
         myFile.print(dateTimeStr);
         myFile.print(",");
+        myFile.print(String(k));
+        myFile.print(",");
         myFile.println(String(MQ4));
         Serial.println("succeeded opening.txt");
-        lcd.setCursor(18, 1);
-        lcd.print("OK");
+        lcd.setCursor(19, 1);
+        lcd.print("O");
         myFile.close();
       } else {
         Serial.println("error opening.txt");
-        lcd.setCursor(18, 1);
+        lcd.setCursor(19, 1);
         lcd.print("X");
       }
       myFile = SD.open("mq6.txt", FILE_WRITE);
       if (myFile) {
         myFile.print(dateTimeStr);
         myFile.print(",");
+        myFile.print(String(k));
+        myFile.print(",");
         myFile.println(String(MQ6));
         Serial.println("succeeded opening.txt");
-        lcd.setCursor(18, 0);
-        lcd.print("OK");
+        lcd.setCursor(19, 0);
+        lcd.print("O");
         myFile.close();
       } else {
         Serial.println("error opening.txt");
-        lcd.setCursor(18, 0);
+        lcd.setCursor(19, 0);
         lcd.print("X");
       }
 
